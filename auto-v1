@@ -1,0 +1,34 @@
+@echo off
+
+REM Check if Google Chrome is installed
+echo Checking if Google Chrome is installed...
+reg query "HKLM\Software\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe" > nul 2>&1
+if %errorlevel% equ 0 (
+    echo Google Chrome is already installed.
+) else (
+    echo Google Chrome is not installed. Downloading and installing the latest version...
+    powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://dl.google.com/chrome/install/latest/chrome_installer.exe', 'chrome_installer.exe')"
+    start /wait chrome_installer.exe
+    del chrome_installer.exe
+    echo Google Chrome has been installed.
+)
+
+REM Make Chrome the default browser
+echo Setting Google Chrome as the default browser...
+REG ADD HKCU\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice /v ProgId /d ChromeHTML /f
+REG ADD HKCU\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice /v ProgId /d ChromeHTML /f
+
+REM Set Adobe as the default program to open PDF files
+echo Setting Adobe as the default program for opening PDF files...
+REG ADD HKCU\Software\Microsoft\Windows\Shell\Associations\MIMEAssociations\application/pdf\UserChoice /v ProgId /d AcroExch.Document.DC /f
+
+REM Enable "Allow pop-ups and redirects" in Chrome
+echo Enabling pop-ups and redirects in Google Chrome...
+REG ADD HKCU\Software\Policies\Google\Chrome\URLWhitelist /v 1 /d "https://*/*" /f
+
+REM Allow sites to download .pdf files upon access in Chrome
+echo Allowing sites to download PDF files in Google Chrome...
+REG ADD HKCU\Software\Google\Chrome\Extensions\mhjfbmdgcfjbbpaeojofohoefgiehjai /v policy /t REG_SZ /d '{ "download_extensions_to_open": ".pdf" }' /f
+
+echo All tasks completed.
+pause
